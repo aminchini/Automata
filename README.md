@@ -1,6 +1,11 @@
 # Automata
 
 ## Deployment
+### Clone
+To download the project run the following command:
+```shell
+git clone https://github.com/aminchini/Automata.git
+```
 ### Requirements Installation
 To install requirements of this project please run the following command in terminal.
 
