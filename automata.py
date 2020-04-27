@@ -71,9 +71,7 @@ class NFA:
         while next_nodes:
             current_nodes = next_nodes.pop(0)
             for a in dfa_alphabet:
-                next_set = set()
-                for node in current_nodes:
-                    next_set = self._next_available_nodes(node, a)
+                next_set = self._next_available_nodes(current_nodes, a)
                 if len(next_set) == 0:
                     continue
                 if next_set not in temp_states:
@@ -84,26 +82,47 @@ class NFA:
                         dfa_final_states.append(name_state(next_set))
                 dfa_transitions.append([name_state(current_nodes), name_state(next_set), a])
 
+        #create trap state
+        temp = {}
+        for trans in dfa_transitions:
+            if trans[0] not in temp:
+                temp[trans[0]] = [trans[1::]]
+            else:
+                temp[trans[0]].append(trans[1::])
+        for tmp in dfa_states:
+            if tmp not in temp.keys():
+                for the_alphabets in self.alphabet:
+                    dfa_transitions.append([tmp, 'trap', the_alphabets])
+            elif (len(temp[tmp]) < len(self.alphabet)):
+                temp_alphabet = self.alphabet.copy()
+                for used_alphabet in temp[tmp]:
+                    temp_alphabet.remove(used_alphabet[1])
+                for new_alphabet in temp_alphabet:
+                    dfa_transitions.append([tmp, 'trap', new_alphabet])
+        for alphab in self.alphabet:
+            dfa_transitions.append(['trap', 'trap', alphab])
+
         return [dfa_states, dfa_alphabet, len(dfa_transitions), dfa_transitions, dfa_final_states]
 
-    def _next_available_nodes(self, current_node, alpha):
+    def _next_available_nodes(self, current_nodes, alpha):
         result = set()
-        for des in self.nfa[current_node]:
-            if des[1] == alpha:
-                result.add(des[0])
-                next_lambda = [i for i in self.nfa[des[0]] if i[1] == '&']
-                while next_lambda:
-                    items = next_lambda.pop(0)
-                    result.add(items[0])
-                    next_lambda += [i for i in self.nfa[items[0]] if i[1] == '&']
-            elif des[1] == '&':
-                for reachables in self._lambda(current_node, alpha):
-                    result.add(reachables)
-                next_lambda = [i for i in self.nfa[des[0]] if i[1] == '&']
-                while next_lambda:
-                    items = next_lambda.pop(0)
-                    result.add(items[0])
-                    next_lambda += [i for i in self.nfa[items[0]] if i[1] == '&']
+        for current_node in current_nodes:
+            for des in self.nfa[current_node]:
+                if des[1] == alpha:
+                    result.add(des[0])
+                    next_lambda = [i for i in self.nfa[des[0]] if i[1] == '&']
+                    while next_lambda:
+                        items = next_lambda.pop(0)
+                        result.add(items[0])
+                        next_lambda += [i for i in self.nfa[items[0]] if i[1] == '&']
+                elif des[1] == '&':
+                    for reachables in self._lambda(current_node, alpha):
+                        result.add(reachables)
+                    next_lambda = [i for i in self.nfa[des[0]] if i[1] == '&']
+                    while next_lambda:
+                        items = next_lambda.pop(0)
+                        result.add(items[0])
+                        next_lambda += [i for i in self.nfa[items[0]] if i[1] == '&']
         return result
 
     def _lambda(self, c_state, alpha):
@@ -148,13 +167,13 @@ class NFA:
         
         
 
+n_alph = ['a', 'b']
 state = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6']
-alph = ['a', 'b']
 num = 9
 tran = [['q0', 'q1','a'], ['q1', 'q1', 'b'], ['q1', 'q2', ], ['q2', 'q3','a'], ['q3', 'q2', 'a'], ['q3', 'q4', 'b'], ['q2', 'q5', 'b'], ['q5', 'q6', 'a'], ['q6', 'q1', 'b']]
 final = ['q1', 'q3', 'q6']
 
-nfa = NFA(state, alph, num, tran, final)
+nfa = NFA(state, ['a', 'b'], num, tran, final)
 print(nfa.IsAcceptByNFA('ab'))
 nfa.Shape()
 
