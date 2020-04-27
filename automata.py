@@ -53,6 +53,59 @@ class NFA:
                         return True
             return False
 
+    def CreateEqeulvantDFA(self):
+        initial_state = self.states[0]
+
+        def name_state(name):
+            return str(set(sorted(name)))
+
+        dfa_alphabet = self.alphabet
+        dfa_states = [name_state([initial_state])]
+        dfa_transitions = []
+        dfa_final_states = []
+
+        
+        temp_states = [[initial_state]]
+        next_nodes = [[initial_state]]
+
+        while next_nodes:
+            current_nodes = next_nodes.pop(0)
+            for a in dfa_alphabet:
+                next_set = set()
+                for node in current_nodes:
+                    next_set = self._next_available_nodes(node, a)
+                if len(next_set) == 0:
+                    continue
+                if next_set not in temp_states:
+                    temp_states.append(next_set)
+                    next_nodes.append(next_set)
+                    dfa_states.append(name_state(next_set))
+                    if any([item for item in next_set if item in self.final_states]):
+                        dfa_final_states.append(name_state(next_set))
+                dfa_transitions.append([name_state(current_nodes), name_state(next_set), a])
+
+        return [dfa_states, dfa_alphabet, len(dfa_transitions), dfa_transitions, dfa_final_states]
+
+    def _next_available_nodes(self, current_node, alpha):
+        result = set()
+        for des in self.nfa[current_node]:
+            if des[1] == alpha:
+                result.add(des[0])
+                next_lambda = [i for i in self.nfa[des[0]] if i[1] == '&']
+                while next_lambda:
+                    items = next_lambda.pop(0)
+                    result.add(items[0])
+                    next_lambda += [i for i in self.nfa[items[0]] if i[1] == '&']
+            elif des[1] == '&':
+                for reachables in self._lambda(current_node, alpha):
+                    result.add(reachables)
+                next_lambda = [i for i in self.nfa[des[0]] if i[1] == '&']
+                while next_lambda:
+                    items = next_lambda.pop(0)
+                    result.add(items[0])
+                    next_lambda += [i for i in self.nfa[items[0]] if i[1] == '&']
+        return result
+
     def _lambda(self, c_state, alpha):
         reached_by_lamda = [c_state]
         result = []
@@ -174,6 +227,10 @@ d_num = 6
 d_tran = [['q0', 'q1','a'], ['q1', 'q1', 'a'], ['q1', 'q1', 'b'], ['q0', 'q2', 'b'], ['q2', 'q2','a'], ['q2', 'q2', 'b']]
 d_final = ['q1']
 
-dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
-print(dfa.IsAcceptByDFA('baabaab'))
-dfa.Shape()
+# dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
+# print(dfa.IsAcceptByDFA('baabaab'))
+# dfa.Shape()
+
+result_dfa = nfa.CreateEqeulvantDFA()
+dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
+dfa_of_nfa.Shape()
