@@ -1,6 +1,5 @@
 import os
 import graphviz
-import pydot
 
 class NFA:
     def __init__(self, 
@@ -244,8 +243,17 @@ class DFA:
 
 state = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6']
 alph = ['a', 'b']
-num = 91
-tran = [['q0', 'q1','a'], ['q1', 'q1', 'b'], ['q1', 'q2', ], ['q2', 'q3','a'], ['q3', 'q2', 'a'], ['q3', 'q4', 'b'], ['q2', 'q5', 'b'], ['q5', 'q6', 'a'], ['q6', 'q1', 'b']]
+num = 9
+tran = [['q0', 'q1', 'a'], 
+        ['q1', 'q1', 'b'], 
+        ['q1', 'q2', ], 
+        ['q2', 'q3', 'a'], 
+        ['q3', 'q2', 'a'], 
+        ['q3', 'q4', 'b'], 
+        ['q2', 'q5', 'b'], 
+        ['q5', 'q6', 'a'], 
+        ['q6', 'q1', 'b']]
+
 final = ['q1', 'q3', 'q6']
 
 nfa = NFA(state, alph, num, tran, final)
@@ -272,7 +280,13 @@ print(dfa_of_nfa.IsAcceptByDFA('abab'))
 d_state = ['q0', 'q1', 'q2']
 d_alph = ['a', 'b']
 d_num = 6
-d_tran = [['q0', 'q1','a'], ['q1', 'q1', 'a'], ['q1', 'q1', 'b'], ['q0', 'q2', 'b'], ['q2', 'q2','a'], ['q2', 'q2', 'b']]
+d_tran = [  ['q0', 'q1', 'a'],
+            ['q1', 'q1', 'a'], 
+            ['q1', 'q1', 'b'], 
+            ['q0', 'q2', 'b'], 
+            ['q2', 'q2', 'a'], 
+            ['q2', 'q2', 'b']]
+
 d_final = ['q1']
 
 # dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
