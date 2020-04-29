@@ -28,6 +28,7 @@ class NFA:
             if j not in self.nfa:
                 self.nfa[j] = [['', '']]
 
+
     def IsAcceptByNFA(self, word):
         next_nodes = [self.states[0]]
         for i in range(len(word)):
@@ -52,6 +53,7 @@ class NFA:
                     if destination[1] == '&' and destination[0] in self.final_states:
                         return True
             return False
+
 
     def CreateEqeulvantDFA(self):
         initial_state = self.states[0]
@@ -104,6 +106,32 @@ class NFA:
 
         return [dfa_states, dfa_alphabet, len(dfa_transitions), dfa_transitions, dfa_final_states]
 
+
+    def Shape(self):
+        g = graphviz.Digraph(format='png')
+        g.node('fake', style='invisible')
+        
+        for nodes in self.nfa.keys():
+            if nodes == self.states[0]:
+                if nodes in self.final_states:
+                    g.node(nodes, root='true',
+                       shape='doublecircle')
+                else:
+                    g.node(nodes, root='true')
+            elif nodes in self.final_states:
+                g.node(nodes, shape='doublecircle')
+            else:
+                g.node(nodes)
+
+        g.edge('fake', self.states[0], style='bold')
+        for transition in self.nfa.keys():
+            for destination in self.nfa[transition]:
+                if destination[1] != '':
+                    g.edge(transition, destination[0],
+                        label=destination[1])
+
+        g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'NFA'))
+
     def _next_available_nodes(self, current_nodes, alpha):
         result = set()
         for current_node in current_nodes:
@@ -139,45 +167,7 @@ class NFA:
                     reached_by_lamda.append(i[0])
                     seen.append(node)
         return result
-
-    def Shape(self):
-        g = graphviz.Digraph(format='png')
-        g.node('fake', style='invisible')
         
-        for nodes in self.nfa.keys():
-            if nodes == self.states[0]:
-                if nodes in self.final_states:
-                    g.node(nodes, root='true',
-                       shape='doublecircle')
-                else:
-                    g.node(nodes, root='true')
-            elif nodes in self.final_states:
-                g.node(nodes, shape='doublecircle')
-            else:
-                g.node(nodes)
-
-        g.edge('fake', self.states[0], style='bold')
-        for transition in self.nfa.keys():
-            for destination in self.nfa[transition]:
-                if destination[1] != '':
-                    g.edge(transition, destination[0],
-                        label=destination[1])
-
-        g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'NFA'))
-        
-        
-
-n_alph = ['a', 'b']
-state = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6']
-num = 9
-tran = [['q0', 'q1','a'], ['q1', 'q1', 'b'], ['q1', 'q2', ], ['q2', 'q3','a'], ['q3', 'q2', 'a'], ['q3', 'q4', 'b'], ['q2', 'q5', 'b'], ['q5', 'q6', 'a'], ['q6', 'q1', 'b']]
-final = ['q1', 'q3', 'q6']
-
-nfa = NFA(state, ['a', 'b'], num, tran, final)
-print(nfa.IsAcceptByNFA('ab'))
-nfa.Shape()
-
-
 
 class DFA:
     def __init__(self, 
@@ -199,6 +189,11 @@ class DFA:
 
 
     def IsAcceptByDFA(self, word):
+        if len(word) == 0:
+            if self.states[0] in self.final_states:
+                return True
+            else:
+                return False
         currrent_state = self.states[0]
         for i in word:
             acceptance = False
@@ -213,7 +208,12 @@ class DFA:
             return True
         else:
             return False
-            
+
+
+    def MakeSimpleDFA(self):
+        pass
+
+
     def Shape(self):
         g = graphviz.Digraph(format='png')
         g.node('fake', style='invisible')
@@ -239,6 +239,35 @@ class DFA:
 
         g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'DFA'))
 
+        
+"""create NFA"""
+
+state = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6']
+alph = ['a', 'b']
+num = 91
+tran = [['q0', 'q1','a'], ['q1', 'q1', 'b'], ['q1', 'q2', ], ['q2', 'q3','a'], ['q3', 'q2', 'a'], ['q3', 'q4', 'b'], ['q2', 'q5', 'b'], ['q5', 'q6', 'a'], ['q6', 'q1', 'b']]
+final = ['q1', 'q3', 'q6']
+
+nfa = NFA(state, alph, num, tran, final)
+
+print(nfa.IsAcceptByNFA(''))
+print(nfa.IsAcceptByNFA('abb'))
+print(nfa.IsAcceptByNFA('abaa'))
+print(nfa.IsAcceptByNFA('abab'))
+
+# nfa.Shape()
+
+result_dfa = nfa.CreateEqeulvantDFA()
+dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
+
+print(dfa_of_nfa.IsAcceptByDFA(''))
+print(dfa_of_nfa.IsAcceptByDFA('abb'))
+print(dfa_of_nfa.IsAcceptByDFA('abaa'))
+print(dfa_of_nfa.IsAcceptByDFA('abab'))
+
+# dfa_of_nfa.Shape()
+
+"""create DFA separately"""
 
 d_state = ['q0', 'q1', 'q2']
 d_alph = ['a', 'b']
@@ -249,7 +278,3 @@ d_final = ['q1']
 # dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
 # print(dfa.IsAcceptByDFA('baabaab'))
 # dfa.Shape()
-
-result_dfa = nfa.CreateEqeulvantDFA()
-dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
-dfa_of_nfa.Shape()
