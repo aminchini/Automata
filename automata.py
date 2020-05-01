@@ -1,4 +1,5 @@
 import os
+import copy
 import graphviz
 
 class NFA:
@@ -102,6 +103,7 @@ class NFA:
                     dfa_transitions.append([tmp, 'trap', new_alphabet])
         for alphab in self.alphabet:
             dfa_transitions.append(['trap', 'trap', alphab])
+        dfa_states.append('trap')
 
         return [dfa_states, dfa_alphabet, len(dfa_transitions), dfa_transitions, dfa_final_states]
 
@@ -210,7 +212,75 @@ class DFA:
 
 
     def MakeSimpleDFA(self):
-        pass
+        non_final = []
+        for state in self.states:
+            if state not in self.final_states:
+                non_final.append(state)
+
+        reachables = {self.states[0]}
+        temp_reach = [self.states[0]]
+        while temp_reach:
+            reachable = temp_reach.pop(0)
+            for item in self.dfa[reachable]:
+                if item[0] not in reachables:
+                    reachables.add(item[0])
+                    temp_reach.append(item[0])
+
+        current_groups = {  'g1': list(reachables.intersection(set(non_final))),
+                            'g2': list(reachables.intersection(set(self.final_states))) }
+        trans = {}
+        for states in current_groups['g1'] + current_groups['g2']:
+            trans[states] = []
+            for des in self.dfa[states]:
+                index = self.alphabet.index(des[1])
+                trans[states].insert(index, des[0])
+
+        
+        while True:
+            next_groups = {}
+            for nodes in trans.keys():
+                name  = ''
+                for node in trans[nodes]:
+                    for g in current_groups.keys():
+                        if node in current_groups[g]:
+                            name += g
+                if name not in next_groups.keys():
+                    next_groups[name] = [nodes]
+                else:
+                    next_groups[name].append(nodes)
+            curr_val = list(current_groups.values())
+            nex_val = list(next_groups.values())
+            if curr_val == nex_val:
+                break
+            current_groups = next_groups
+        
+        res_nodes = {}
+        res_states = []
+        state_group = {}
+        res_final = set()
+        g = 1
+        for val in current_groups.values():
+            res_nodes['g'+str(g)] = val
+            if self.states[0] in val:
+                res_states.insert(0, 'g'+str(g))
+            else:
+                res_states.append('g'+str(g))
+            for value in val:
+                state_group[value] = 'g'+str(g)
+                if value in self.final_states:
+                    res_final.add('g'+str(g))
+            g += 1
+
+        res_trans = []
+        for key in res_nodes.keys():
+            for nod in trans.keys():
+                if nod == res_nodes[key][0]:
+                    c = 0
+                    for a in self.alphabet:
+                        res_trans.append([key, state_group[trans[nod][c]], a])
+                        c += 1
+
+        return [res_states, self.alphabet, len(res_trans), res_trans, list(res_final)]
 
 
     def Shape(self):
@@ -258,37 +328,65 @@ final = ['q1', 'q3', 'q6']
 
 nfa = NFA(state, alph, num, tran, final)
 
-print(nfa.IsAcceptByNFA(''))
-print(nfa.IsAcceptByNFA('abb'))
-print(nfa.IsAcceptByNFA('abaa'))
-print(nfa.IsAcceptByNFA('abab'))
+# print(nfa.IsAcceptByNFA(''))
+# print(nfa.IsAcceptByNFA('abb'))
+# print(nfa.IsAcceptByNFA('abaa'))
+# print(nfa.IsAcceptByNFA('abab'))
+
+# nfa.FindRegex()
 
 # nfa.Shape()
 
 result_dfa = nfa.CreateEqeulvantDFA()
 dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
-
-print(dfa_of_nfa.IsAcceptByDFA(''))
-print(dfa_of_nfa.IsAcceptByDFA('abb'))
-print(dfa_of_nfa.IsAcceptByDFA('abaa'))
-print(dfa_of_nfa.IsAcceptByDFA('abab'))
-
 # dfa_of_nfa.Shape()
+
+# print(dfa_of_nfa.IsAcceptByDFA(''))
+# print(dfa_of_nfa.IsAcceptByDFA('abb'))
+# print(dfa_of_nfa.IsAcceptByDFA('abaa'))
+# print(dfa_of_nfa.IsAcceptByDFA('abab'))
+
+simple = dfa_of_nfa.MakeSimpleDFA()
+sim_of_dfa = DFA(simple[0], simple[1], simple[2], simple[3], simple[4])
+sim_of_dfa.Shape()
 
 """create DFA separately"""
 
-d_state = ['q0', 'q1', 'q2']
+d_state = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5']
 d_alph = ['a', 'b']
-d_num = 6
+d_num = 12
 d_tran = [  ['q0', 'q1', 'a'],
-            ['q1', 'q1', 'a'], 
-            ['q1', 'q1', 'b'], 
-            ['q0', 'q2', 'b'], 
-            ['q2', 'q2', 'a'], 
-            ['q2', 'q2', 'b']]
+            ['q1', 'q0', 'a'], 
+            ['q1', 'q3', 'b'], 
+            ['q0', 'q3', 'b'], 
+            ['q2', 'q1', 'a'], 
+            ['q2', 'q4', 'b'],
+            ['q4', 'q3', 'a'], 
+            ['q4', 'q3', 'b'], 
+            ['q3', 'q5', 'a'], 
+            ['q3', 'q5', 'b'], 
+            ['q5', 'q5', 'a'],
+            ['q5', 'q5', 'b']]
 
-d_final = ['q1']
+d_final = ['q3', 'q5']
 
-# dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
-# print(dfa.IsAcceptByDFA('baabaab'))
+dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
+# print(dfa.IsAcceptByDFA('aabaab'))
+# dfa.MakeSimpleDFA()
 # dfa.Shape()
+
+"""Another NFA"""
+n_state = ['q0', 'q1', 'q2', 'q3']
+n_alph = ['a', 'b']
+n_num = 6
+n_tran = [  ['q0', 'q1', 'a'],
+            ['q1', 'q2',],
+            ['q2', 'q0',],
+            ['q2', 'q3', 'b'],
+            ['q3', 'q2', 'a'],
+            ['q3', 'q3', 'a']   ]
+n_final = ['q3']
+# n_nfa = NFA(n_state, n_alph, n_num, n_tran, n_final)
+# n_dfa = n_nfa.CreateEqeulvantDFA()
+# n_dfa_of_nfa = DFA(n_dfa[0], n_dfa[1], n_dfa[2], n_dfa[3], n_dfa[4])
+# n_dfa_of_nfa.Shape()
