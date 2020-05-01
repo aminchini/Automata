@@ -55,6 +55,86 @@ class NFA:
             return False
 
 
+    def FindRegex (self):
+        the_nfa = {}
+        temp_nfa = copy.deepcopy(self.nfa)
+        temp_nfa['s'] = [[self.states[0], '&']]
+        temp_nfa['f'] = [['', '']]
+        for finals in self.final_states:
+            temp_nfa[finals].append(['f', '&'])
+        for key in temp_nfa.keys():
+            transition = {}
+            transition['out'] = temp_nfa[key]
+            _in = []
+            for item in temp_nfa.keys():
+                for eleman in temp_nfa[item]:
+                    if eleman[0] == key:
+                        _in.append([item, eleman[1]])
+            transition['in'] = _in
+            the_nfa[key] = transition
+
+        def exmaker(state, entry, out):
+            loops = []
+            for en in the_nfa[state]['in']:
+                for o in the_nfa[state]['out']:
+                    if en == o:
+                        loops.append(en[1])
+            if entry[0] == out[0]:
+                loops.append(out[1]+entry[1])
+            
+            loop = ''
+            if len(loops) == 1:
+                loop = '(' + loops[0] + ')*'
+            elif len(loops) > 1 :
+                loop = '(' + '+'.join(list(set(loops))) + ')*'
+            
+            res = ''
+            if entry[1] == '&' and out[1] != '&':
+                res = loop + out[1]
+            elif out[1] == '&' and entry[1] != '&':
+                res = entry[1] + loop
+            elif entry[1] == '&' and out[1] == '&':
+                if loop != '':
+                    res = loop
+                else:
+                    res = '&'
+            else:
+                res = entry[1] + loop + out[1]
+            return res
+        
+        the_state = []
+        for s in self.states:
+            if s not in self.final_states:
+                the_state.append(s)
+        the_state += self.final_states
+        
+        for state in the_state:
+            state_info = the_nfa[state]
+            deleted = False
+            for entry in state_info['in']:
+                if entry in state_info['out']:
+                    continue
+                for o in the_nfa[entry[0]]['out']:
+                    if o[0] == state:
+                        index = the_nfa[entry[0]]['out'].remove(o)
+                for out in state_info['out']:
+                    if out in state_info['in']:
+                        continue
+                    if out == ['', '']:
+                        continue
+                    exp = exmaker(state, entry, out)
+                    the_nfa[entry[0]]['out'].append([out[0], exp])
+                    for en in the_nfa[out[0]]['in']:
+                        if en[0] == state:
+                            index = the_nfa[out[0]]['in'].index(en)
+                            the_nfa[out[0]]['in'][index] = [entry[0], exp]
+                            deleted = True
+                    if deleted:
+                        the_nfa[out[0]]['in'].append([entry[0], exp])
+
+        return ' + '.join(list(set([i[1] for i in the_nfa['s']['out']])))
+
+
     def CreateEqeulvantDFA(self):
         initial_state = self.states[0]
 
@@ -333,12 +413,12 @@ nfa = NFA(state, alph, num, tran, final)
 # print(nfa.IsAcceptByNFA('abaa'))
 # print(nfa.IsAcceptByNFA('abab'))
 
-# nfa.FindRegex()
+print(nfa.FindRegex())
 
 # nfa.Shape()
 
-result_dfa = nfa.CreateEqeulvantDFA()
-dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
+# result_dfa = nfa.CreateEqeulvantDFA()
+# dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
 # dfa_of_nfa.Shape()
 
 # print(dfa_of_nfa.IsAcceptByDFA(''))
@@ -346,9 +426,9 @@ dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], res
 # print(dfa_of_nfa.IsAcceptByDFA('abaa'))
 # print(dfa_of_nfa.IsAcceptByDFA('abab'))
 
-simple = dfa_of_nfa.MakeSimpleDFA()
-sim_of_dfa = DFA(simple[0], simple[1], simple[2], simple[3], simple[4])
-sim_of_dfa.Shape()
+# simple = dfa_of_nfa.MakeSimpleDFA()
+# sim_of_dfa = DFA(simple[0], simple[1], simple[2], simple[3], simple[4])
+# sim_of_dfa.Shape()
 
 """create DFA separately"""
 
@@ -370,12 +450,18 @@ d_tran = [  ['q0', 'q1', 'a'],
 
 d_final = ['q3', 'q5']
 
-dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
+# dfa = DFA(d_state, d_alph, d_num, d_tran, d_final)
+
 # print(dfa.IsAcceptByDFA('aabaab'))
-# dfa.MakeSimpleDFA()
+
+# sm = dfa.MakeSimpleDFA()
+# sm_of_dfa = DFA(sm[0], sm[1], sm[2], sm[3], sm[4])
+# sm_of_dfa.Shape()
+
 # dfa.Shape()
 
 """Another NFA"""
+
 n_state = ['q0', 'q1', 'q2', 'q3']
 n_alph = ['a', 'b']
 n_num = 6
@@ -386,7 +472,9 @@ n_tran = [  ['q0', 'q1', 'a'],
             ['q3', 'q2', 'a'],
             ['q3', 'q3', 'a']   ]
 n_final = ['q3']
-# n_nfa = NFA(n_state, n_alph, n_num, n_tran, n_final)
+
+n_nfa = NFA(n_state, n_alph, n_num, n_tran, n_final)
+# n_nfa.FindRegex()
 # n_dfa = n_nfa.CreateEqeulvantDFA()
 # n_dfa_of_nfa = DFA(n_dfa[0], n_dfa[1], n_dfa[2], n_dfa[3], n_dfa[4])
 # n_dfa_of_nfa.Shape()
