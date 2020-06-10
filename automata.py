@@ -188,7 +188,7 @@ class NFA:
         return [dfa_states, dfa_alphabet, len(dfa_transitions), dfa_transitions, dfa_final_states]
 
 
-    def Shape(self):
+    def Shape(self, name):
         g = graphviz.Digraph(format='png')
         g.node('fake', style='invisible')
         
@@ -211,7 +211,7 @@ class NFA:
                     g.edge(transition, destination[0],
                         label=destination[1])
 
-        g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'NFA'))
+        g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), name))
 
     def _next_available_nodes(self, current_nodes, alpha):
         result = set()
@@ -363,7 +363,7 @@ class DFA:
         return [res_states, self.alphabet, len(res_trans), res_trans, list(res_final)]
 
 
-    def Shape(self):
+    def Shape(self, name):
         g = graphviz.Digraph(format='png')
         g.node('fake', style='invisible')
         
@@ -386,7 +386,7 @@ class DFA:
                     g.edge(transition, destination[0],
                         label=destination[1])
 
-        g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'DFA'))
+        g.render(filename=os.path.join(os.path.dirname(os.path.realpath(__file__)), name))
 
         
 """create NFA"""
@@ -408,29 +408,29 @@ final = ['q1', 'q3', 'q6']
 
 nfa = NFA(state, alph, num, tran, final)
 
-# print(nfa.IsAcceptByNFA(''))
-# print(nfa.IsAcceptByNFA('abb'))
-# print(nfa.IsAcceptByNFA('abaa'))
-# print(nfa.IsAcceptByNFA('abab'))
+print(nfa.IsAcceptByNFA(''))
+print(nfa.IsAcceptByNFA('abb'))
+print(nfa.IsAcceptByNFA('abaa'))
+print(nfa.IsAcceptByNFA('abab'))
 
 print(nfa.FindRegex())
 
-# nfa.Shape()
+nfa.Shape('the_NFA')
 
-# result_dfa = nfa.CreateEqeulvantDFA()
-# dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
-# dfa_of_nfa.Shape()
+result_dfa = nfa.CreateEqeulvantDFA()
+dfa_of_nfa = DFA(result_dfa[0], result_dfa[1], result_dfa[2], result_dfa[3], result_dfa[4])
+dfa_of_nfa.Shape('DFA_of_NFA')
 
-# print(dfa_of_nfa.IsAcceptByDFA(''))
-# print(dfa_of_nfa.IsAcceptByDFA('abb'))
-# print(dfa_of_nfa.IsAcceptByDFA('abaa'))
-# print(dfa_of_nfa.IsAcceptByDFA('abab'))
+print(dfa_of_nfa.IsAcceptByDFA(''))
+print(dfa_of_nfa.IsAcceptByDFA('abb'))
+print(dfa_of_nfa.IsAcceptByDFA('abaa'))
+print(dfa_of_nfa.IsAcceptByDFA('abab'))
 
-# simple = dfa_of_nfa.MakeSimpleDFA()
-# sim_of_dfa = DFA(simple[0], simple[1], simple[2], simple[3], simple[4])
-# sim_of_dfa.Shape()
+simple = dfa_of_nfa.MakeSimpleDFA()
+sim_of_dfa = DFA(simple[0], simple[1], simple[2], simple[3], simple[4])
+sim_of_dfa.Shape('Simple_DFA')
 
-"""create DFA separately"""
+"""Create another DFA separately"""
 
 d_state = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5']
 d_alph = ['a', 'b']
@@ -473,7 +473,7 @@ n_tran = [  ['q0', 'q1', 'a'],
             ['q3', 'q3', 'a']   ]
 n_final = ['q3']
 
-n_nfa = NFA(n_state, n_alph, n_num, n_tran, n_final)
+# n_nfa = NFA(n_state, n_alph, n_num, n_tran, n_final)
 # n_nfa.FindRegex()
 # n_dfa = n_nfa.CreateEqeulvantDFA()
 # n_dfa_of_nfa = DFA(n_dfa[0], n_dfa[1], n_dfa[2], n_dfa[3], n_dfa[4])

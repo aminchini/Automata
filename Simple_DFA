@@ -1,0 +1,31 @@
+digraph {
+	fake [style=invisible]
+	g1 [root=true]
+	g2
+	g3
+	g4
+	g5 [shape=doublecircle]
+	g6 [shape=doublecircle]
+	g7 [shape=doublecircle]
+	g8 [shape=doublecircle]
+	g9 [shape=doublecircle]
+		fake -> g1 [style=bold]
+		g1 -> g7 [label=a]
+		g1 -> g2 [label=b]
+		g2 -> g2 [label=a]
+		g2 -> g2 [label=b]
+		g3 -> g8 [label=a]
+		g3 -> g2 [label=b]
+		g4 -> g5 [label=a]
+		g4 -> g3 [label=b]
+		g5 -> g4 [label=a]
+		g5 -> g2 [label=b]
+		g6 -> g4 [label=a]
+		g6 -> g7 [label=b]
+		g7 -> g5 [label=a]
+		g7 -> g9 [label=b]
+		g8 -> g2 [label=a]
+		g8 -> g7 [label=b]
+		g9 -> g6 [label=a]
+		g9 -> g9 [label=b]
+}
